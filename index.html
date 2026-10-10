@@ -167,7 +167,7 @@ function land(face) {
   st.hist.unshift({ f: face, h: hit }); st.hist = st.hist.slice(0, 30);
   save(); render();
   $('result').innerHTML = (face === 'H' ? 'HEADS 👑' : 'TAILS ⭐') + (verdict ? '<small>' + verdict + '</small>' : '');
-  busy = false; coin.disabled = false; coin.focus({ preventScroll: true });
+  busy = false; coin.disabled = false;
 }
 
 // ---------- screen ----------
@@ -181,8 +181,19 @@ function render() {
   $('hist').innerHTML = st.hist.map(h => '<span class="chip ' + h.f + (h.h === true ? ' hit' : h.h === false ? ' miss' : '') + '" title="' + (h.f === 'H' ? 'Heads' : 'Tails') + '">' + h.f + '</span>').join('');
   $('soundBtn').textContent = st.sound ? '🔊 Sound on' : '🔇 Sound off';
 }
-coin.addEventListener('click', toss);
-window.addEventListener('keydown', e => { if (e.code === 'Space' && e.target === document.body) { e.preventDefault(); toss(); } });
+// One way in for each kind of input, so the coin never flips twice from a single action:
+//  - mouse / finger click on the coin (clicks the browser makes by itself for Space or Enter have detail 0 and are ignored)
+//  - Space or Enter key, once per key press (holding the key does nothing extra)
+coin.addEventListener('click', e => { if (e.detail === 0) return; toss(); });
+window.addEventListener('keydown', e => {
+  if (e.code !== 'Space' && e.code !== 'Enter') return;
+  const t = e.target;
+  if (t !== document.body && t !== coin) return;          // let the other buttons work normally
+  e.preventDefault();
+  if (e.repeat) return;
+  toss();
+});
+window.addEventListener('keyup', e => { if (e.code === 'Space' && (e.target === coin || e.target === document.body)) e.preventDefault(); });
 document.querySelectorAll('#callRow .pill').forEach(b => b.onclick = () => {
   call = b.dataset.call; document.querySelectorAll('#callRow .pill').forEach(x => x.classList.toggle('on', x === b));
 });
