@@ -22,15 +22,18 @@
   #shadow.tossing { animation:shadow 1.5s cubic-bezier(.3,.1,.5,1) forwards; }
   @keyframes shadow { 0% { transform:scale(1); opacity:0.6; } 45% { transform:scale(0.45); opacity:0.2; } 100% { transform:scale(1); opacity:0.6; } }
 
-  #coin { position:relative; width:200px; height:200px; padding:0; border:0; background:none; cursor:pointer; transform-style:preserve-3d; transition:transform 1.5s cubic-bezier(.15,.7,.2,1); outline:none; }
+  #coin { position:relative; width:200px; height:200px; cursor:pointer; -webkit-transform-style:preserve-3d; transform-style:preserve-3d; touch-action:manipulation; transition:transform 1.5s cubic-bezier(.15,.7,.2,1); outline:none; }
   #coin:focus-visible .face { box-shadow:0 0 0 4px #fff; }
-  .face { position:absolute; inset:0; border-radius:50%; backface-visibility:hidden; -webkit-backface-visibility:hidden; overflow:hidden; }
+  .face { position:absolute; inset:0; border-radius:50%; backface-visibility:hidden; -webkit-backface-visibility:hidden; }
   .face.front { transform:translateZ(6px); }
   .face.back { transform:rotateX(180deg) translateZ(6px); }
   .face svg { width:100%; height:100%; display:block; font-family:'Nirmala UI','Noto Sans Devanagari','Mangal','Segoe UI',system-ui,sans-serif; }
   .edge { position:absolute; inset:0; border-radius:50%; background:linear-gradient(#c9ced2, #7f868c); transform:translateZ(var(--z)); }
-  #coin:not(:disabled):hover { filter:brightness(1.07); }
-  #coin:disabled { cursor:default; }
+  #coin:not(.busy):hover { filter:brightness(1.07); }
+  #coin.busy { cursor:default; }
+  /* once the coin has landed it is shown flat: only the face that came up is drawn, upright (some phone browsers don't hide the back of a flipped element) */
+  #coin.settled.heads .back, #coin.settled.tails .front { display:none; }
+  #coin.settled.tails .back { transform:translateZ(6px); }
 
   #result { min-height:56px; font-size:clamp(28px, 6vw, 40px); font-weight:800; margin-top:4px; text-align:center; text-shadow:0 2px 10px rgba(0,0,0,0.5); }
   #result small { display:block; font-size:16px; font-weight:600; opacity:0.9; margin-top:2px; }
@@ -66,7 +69,7 @@
   <div id="stage">
     <div id="shadow"></div>
     <div id="arc">
-      <button id="coin" aria-label="Toss the coin">
+      <div id="coin" role="button" tabindex="0" aria-label="Toss the coin">
         <!-- HEADS: silver ring, golden centre, lion capital -->
         <div class="face front">
           <svg viewBox="0 0 200 200" aria-hidden="true">
@@ -134,7 +137,7 @@
             </g>
           </svg>
         </div>
-      </button>
+      </div>
     </div>
   </div>
 
@@ -208,13 +211,21 @@ function sfxWin() { [523, 659, 784].forEach((f, i) => tone(f, 0.22, 'triangle', 
 function sfxLose() { tone(300, 0.35, 'sawtooth', 0.08, 150, 0.55); }
 
 // ---------- toss ----------
+let lastTilt = 0;
+function noTransition(fn) { coin.style.transition = 'none'; fn(); void coin.offsetWidth; coin.style.transition = ''; }
+// show the landed face flat and upright
+function settle(face) { noTransition(() => { coin.classList.add('settled', face === 'H' ? 'heads' : 'tails'); coin.style.transform = 'rotateZ(' + lastTilt + 'deg)'; }); }
+// go back to the normal 3D pose at the same angle the coin was resting at, ready to spin again
+function unsettle() { if (!coin.classList.contains('settled')) return; noTransition(() => { coin.classList.remove('settled', 'heads', 'tails'); coin.style.transform = 'rotateZ(' + lastTilt + 'deg) rotateX(' + rot + 'deg)'; }); }
 function toss() {
   if (busy) return;
-  busy = true; coin.disabled = true; $('result').innerHTML = '&nbsp;';
+  busy = true; coin.classList.add('busy'); $('result').innerHTML = '&nbsp;';
+  unsettle();
   const face = flipRandom();                       // 'H' or 'T'
   const want = face === 'H' ? 0 : 180;
   rot += 360 * spinsRandom() + ((want - (rot % 360) + 360) % 360);
   const tilt = (Math.random() - 0.5) * 16;
+  lastTilt = tilt;
   coin.style.transform = 'rotateZ(' + tilt + 'deg) rotateX(' + rot + 'deg)';
   arc.classList.remove('tossing'); shadow.classList.remove('tossing'); void arc.offsetWidth;
   arc.classList.add('tossing'); shadow.classList.add('tossing');
@@ -233,7 +244,8 @@ function land(face) {
   st.hist.unshift({ f: face, h: hit }); st.hist = st.hist.slice(0, 30);
   save(); render();
   $('result').innerHTML = (face === 'H' ? 'HEADS 🦁' : 'TAILS ₹10') + (verdict ? '<small>' + verdict + '</small>' : '');
-  busy = false; coin.disabled = false;
+  settle(face);
+  busy = false; coin.classList.remove('busy');
 }
 
 // ---------- screen ----------
@@ -248,9 +260,9 @@ function render() {
   $('soundBtn').textContent = st.sound ? '🔊 Sound on' : '🔇 Sound off';
 }
 // One way in for each kind of input, so the coin never flips twice from a single action:
-//  - mouse / finger click on the coin (clicks the browser makes by itself for Space or Enter have detail 0 and are ignored)
+//  - mouse / finger click on the coin (the coin is a plain element, so the browser never makes its own click for Space or Enter)
 //  - Space or Enter key, once per key press (holding the key does nothing extra)
-coin.addEventListener('click', e => { if (e.detail === 0) return; toss(); });
+coin.addEventListener('click', () => toss());
 window.addEventListener('keydown', e => {
   if (e.code !== 'Space' && e.code !== 'Enter') return;
   const t = e.target;
