@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Coin Toss</title>
+<title>₹10 Coin Toss</title>
 <meta name="description" content="Click the coin to toss it. Heads or tails?">
 <meta name="theme-color" content="#14213d">
 <style>
@@ -24,13 +24,11 @@
 
   #coin { position:relative; width:200px; height:200px; padding:0; border:0; background:none; cursor:pointer; transform-style:preserve-3d; transition:transform 1.5s cubic-bezier(.15,.7,.2,1); outline:none; }
   #coin:focus-visible .face { box-shadow:0 0 0 4px #fff; }
-  .face { position:absolute; inset:0; border-radius:50%; backface-visibility:hidden; -webkit-backface-visibility:hidden;
-    background:radial-gradient(circle at 34% 28%, var(--gold1) 0%, var(--gold2) 55%, var(--gold3) 100%); border:6px solid #c99a14; box-shadow:inset 0 0 0 5px rgba(255,255,255,0.18), inset 0 0 22px rgba(120,70,0,0.55); display:flex; align-items:center; justify-content:center; }
-  .face::before { content:''; position:absolute; inset:14px; border-radius:50%; border:3px dashed rgba(120,70,0,0.55); }
+  .face { position:absolute; inset:0; border-radius:50%; backface-visibility:hidden; -webkit-backface-visibility:hidden; overflow:hidden; }
   .face.front { transform:translateZ(6px); }
   .face.back { transform:rotateX(180deg) translateZ(6px); }
-  .face svg { width:62%; height:62%; filter:drop-shadow(0 2px 1px rgba(255,255,255,0.45)); }
-  .edge { position:absolute; inset:0; border-radius:50%; background:linear-gradient(#a8770b, #7a5508); transform:translateZ(var(--z)); }
+  .face svg { width:100%; height:100%; display:block; font-family:'Nirmala UI','Noto Sans Devanagari','Mangal','Segoe UI',system-ui,sans-serif; }
+  .edge { position:absolute; inset:0; border-radius:50%; background:linear-gradient(#c9ced2, #7f868c); transform:translateZ(var(--z)); }
   #coin:not(:disabled):hover { filter:brightness(1.07); }
   #coin:disabled { cursor:default; }
 
@@ -62,18 +60,79 @@
 </style>
 </head>
 <body>
-  <h1>🪙 Coin Toss</h1>
-  <p class="sub">Click the coin to toss it!</p>
+  <h1>₹10 Coin Toss</h1>
+  <p class="sub">Click the ₹10 coin to toss it!</p>
 
   <div id="stage">
     <div id="shadow"></div>
     <div id="arc">
       <button id="coin" aria-label="Toss the coin">
+        <!-- HEADS: silver ring, golden centre, lion capital -->
         <div class="face front">
-          <svg viewBox="0 0 100 100" aria-hidden="true"><path d="M14 74 L22 34 L38 52 L50 24 L62 52 L78 34 L86 74 Z" fill="#8a5a00"/><rect x="14" y="76" width="72" height="10" rx="4" fill="#8a5a00"/><circle cx="22" cy="32" r="5" fill="#8a5a00"/><circle cx="50" cy="22" r="5" fill="#8a5a00"/><circle cx="78" cy="32" r="5" fill="#8a5a00"/></svg>
+          <svg viewBox="0 0 200 200" aria-hidden="true">
+            <defs>
+              <radialGradient id="ringF" cx="35%" cy="28%" r="85%"><stop offset="0" stop-color="#f9fbfc"/><stop offset=".55" stop-color="#c6cbcf"/><stop offset="1" stop-color="#868d94"/></radialGradient>
+              <radialGradient id="goldF" cx="35%" cy="28%" r="85%"><stop offset="0" stop-color="#fff0a8"/><stop offset=".55" stop-color="#e0aa24"/><stop offset="1" stop-color="#a8770b"/></radialGradient>
+              <filter id="embF" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="1" stdDeviation="0.4" flood-color="#fff3b8" flood-opacity="0.95"/></filter>
+              <filter id="embR" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="0.8" stdDeviation="0.3" flood-color="#ffffff" flood-opacity="0.9"/></filter>
+              <path id="topArcF" d="M 20 100 A 80 80 0 0 1 180 100"/>
+            </defs>
+            <circle cx="100" cy="100" r="99" fill="url(#ringF)"/>
+            <circle cx="100" cy="100" r="95" fill="none" stroke="rgba(0,0,0,0.28)" stroke-width="2" stroke-dasharray="1.6 3.4"/>
+            <circle cx="100" cy="100" r="70" fill="#767d84"/>
+            <circle cx="100" cy="100" r="68" fill="url(#goldF)"/>
+            <circle cx="100" cy="100" r="63" fill="none" stroke="rgba(120,70,0,0.45)" stroke-width="1.4" stroke-dasharray="3 3"/>
+            <g filter="url(#embR)" fill="#4f545a" font-weight="800" font-size="14">
+              <text><textPath href="#topArcF" startOffset="9%">भारत</textPath></text>
+              <text text-anchor="end"><textPath href="#topArcF" startOffset="91%" text-anchor="end">INDIA</textPath></text>
+            </g>
+            <circle cx="15.5" cy="100" r="2.6" fill="#5c6167"/><circle cx="184.5" cy="100" r="2.6" fill="#5c6167"/>
+            <g filter="url(#embF)">
+              <!-- three lions -->
+              <path d="M70 86 Q71 102 76 109 L124 109 Q129 102 130 86 Q115 93 100 94 Q85 93 70 86 Z" fill="#7a4f00"/>
+              <path d="M93.0 80.0 L87.2 82.6 L91.3 87.4 L85.0 87.2 L86.6 93.3 L81.0 90.4 L79.8 96.6 L76.0 91.5 L72.2 96.6 L71.0 90.4 L65.4 93.3 L67.0 87.2 L60.7 87.4 L64.8 82.6 L59.0 80.0 L64.8 77.4 L60.7 72.6 L67.0 72.8 L65.4 66.7 L71.0 69.6 L72.2 63.4 L76.0 68.5 L79.8 63.4 L81.0 69.6 L86.6 66.7 L85.0 72.8 L91.3 72.6 L87.2 77.4 Z" fill="#8f6008"/><path d="M141.0 80.0 L135.2 82.6 L139.3 87.4 L133.0 87.2 L134.6 93.3 L129.0 90.4 L127.8 96.6 L124.0 91.5 L120.2 96.6 L119.0 90.4 L113.4 93.3 L115.0 87.2 L108.7 87.4 L112.8 82.6 L107.0 80.0 L112.8 77.4 L108.7 72.6 L115.0 72.8 L113.4 66.7 L119.0 69.6 L120.2 63.4 L124.0 68.5 L127.8 63.4 L129.0 69.6 L134.6 66.7 L133.0 72.8 L139.3 72.6 L135.2 77.4 Z" fill="#8f6008"/>
+              <circle cx="76" cy="80" r="9" fill="#b47c10"/><circle cx="124" cy="80" r="9" fill="#b47c10"/>
+              <path d="M123.0 72.0 L115.2 75.0 L121.2 80.8 L112.9 80.6 L116.3 88.3 L108.6 84.9 L108.8 93.2 L103.0 87.2 L100.0 95.0 L97.0 87.2 L91.2 93.2 L91.4 84.9 L83.7 88.3 L87.1 80.6 L78.8 80.8 L84.8 75.0 L77.0 72.0 L84.8 69.0 L78.8 63.2 L87.1 63.4 L83.7 55.7 L91.4 59.1 L91.2 50.8 L97.0 56.8 L100.0 49.0 L103.0 56.8 L108.8 50.8 L108.6 59.1 L116.3 55.7 L112.9 63.4 L121.2 63.2 L115.2 69.0 Z" fill="#8f6008"/><circle cx="100" cy="72" r="12.5" fill="#c18915"/>
+              <g fill="#3a2400"><circle cx="95" cy="70" r="1.7"/><circle cx="105" cy="70" r="1.7"/><path d="M96.8 76 L103.2 76 L100 80.4 Z"/><circle cx="73" cy="78" r="1.3"/><circle cx="127" cy="78" r="1.3"/></g>
+              <path d="M95 83 Q100 86.5 105 83" fill="none" stroke="#3a2400" stroke-width="1.3" stroke-linecap="round"/>
+              <!-- abacus with the wheel, bull and horse -->
+              <rect x="62" y="109" width="76" height="10" rx="2.5" fill="#6a4300"/>
+              <circle cx="100" cy="114" r="4.4" fill="#e9b93a"/>
+              <g stroke="#6a4300" stroke-width="0.7"><path d="M100 109.8 V118.2 M95.8 114 H104.2 M97 111 L103 117 M103 111 L97 117"/></g>
+              <ellipse cx="78" cy="114.5" rx="6" ry="2.6" fill="#e9b93a"/><ellipse cx="122" cy="114.5" rx="6" ry="2.6" fill="#e9b93a"/>
+              <path d="M66 119 Q100 140 134 119 Z" fill="#7a4f00"/>
+              <path d="M82 124 Q100 132 118 124" fill="none" stroke="#e9b93a" stroke-width="1" opacity="0.7"/>
+              <text x="100" y="152" text-anchor="middle" font-size="12.5" font-weight="800" fill="#5b3a00">सत्यमेव जयते</text>
+            </g>
+          </svg>
         </div>
+        <!-- TAILS: the value -->
         <div class="face back">
-          <svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 8 L61 38 L93 39 L67 58 L77 90 L50 71 L23 90 L33 58 L7 39 L39 38 Z" fill="#8a5a00"/></svg>
+          <svg viewBox="0 0 200 200" aria-hidden="true">
+            <defs>
+              <radialGradient id="ringB" cx="35%" cy="28%" r="85%"><stop offset="0" stop-color="#f9fbfc"/><stop offset=".55" stop-color="#c6cbcf"/><stop offset="1" stop-color="#868d94"/></radialGradient>
+              <radialGradient id="goldB" cx="35%" cy="28%" r="85%"><stop offset="0" stop-color="#fff0a8"/><stop offset=".55" stop-color="#e0aa24"/><stop offset="1" stop-color="#a8770b"/></radialGradient>
+              <filter id="embB" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="1" stdDeviation="0.4" flood-color="#fff3b8" flood-opacity="0.95"/></filter>
+              <filter id="embRB" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="0.8" stdDeviation="0.3" flood-color="#ffffff" flood-opacity="0.9"/></filter>
+              <path id="topArcB" d="M 20 100 A 80 80 0 0 1 180 100"/>
+              <path id="botArcB" d="M 9 100 A 91 91 0 0 0 191 100"/>
+            </defs>
+            <circle cx="100" cy="100" r="99" fill="url(#ringB)"/>
+            <circle cx="100" cy="100" r="95" fill="none" stroke="rgba(0,0,0,0.28)" stroke-width="2" stroke-dasharray="1.6 3.4"/>
+            <circle cx="100" cy="100" r="70" fill="#767d84"/>
+            <circle cx="100" cy="100" r="68" fill="url(#goldB)"/>
+            <circle cx="100" cy="100" r="63" fill="none" stroke="rgba(120,70,0,0.45)" stroke-width="1.4" stroke-dasharray="3 3"/>
+            <g filter="url(#embRB)" fill="#4f545a" font-weight="800" font-size="13">
+              <text text-anchor="middle"><textPath href="#topArcB" startOffset="50%" text-anchor="middle">TEN RUPEES</textPath></text>
+              <text text-anchor="middle"><textPath href="#botArcB" startOffset="50%" text-anchor="middle">दस रुपये</textPath></text>
+            </g>
+            <circle cx="15.5" cy="100" r="2.6" fill="#5c6167"/><circle cx="184.5" cy="100" r="2.6" fill="#5c6167"/>
+            <g stroke="rgba(120,70,0,0.38)" stroke-width="1.2" id="rays"></g>
+            <g filter="url(#embB)">
+              <text x="100" y="118" text-anchor="middle" font-size="58" font-weight="900" fill="#6a4300" letter-spacing="-2">₹10</text>
+              <text x="100" y="146" text-anchor="middle" font-size="12" font-weight="800" fill="#6a4300" letter-spacing="2">2025</text>
+            </g>
+          </svg>
         </div>
       </button>
     </div>
@@ -85,8 +144,8 @@
   <div class="row" id="callRow">
     <span class="lbl">Call it:</span>
     <button class="pill on" data-call="">No call</button>
-    <button class="pill" data-call="H">Heads 👑</button>
-    <button class="pill" data-call="T">Tails ⭐</button>
+    <button class="pill" data-call="H">Heads 🦁</button>
+    <button class="pill" data-call="T">Tails ₹10</button>
   </div>
 
   <div id="stats">
@@ -121,6 +180,13 @@ let rot = 0, busy = false, call = '';
 
 // edge of the coin: a stack of thin discs so it looks thick when it spins
 for (let z = -5; z <= 5; z++) { const e = document.createElement('div'); e.className = 'edge'; e.style.setProperty('--z', z + 'px'); coin.insertBefore(e, coin.firstChild); }
+
+// little rays around the inside of the golden centre on the "₹10" side
+(function () {
+  const g = document.getElementById('rays'); let d = '';
+  for (let i = 0; i < 30; i++) { const a = i / 30 * Math.PI * 2, c = Math.cos(a), s = Math.sin(a); d += 'M' + (100 + c * 52).toFixed(1) + ' ' + (100 + s * 52).toFixed(1) + 'L' + (100 + c * 60).toFixed(1) + ' ' + (100 + s * 60).toFixed(1); }
+  const p = document.createElementNS('http://www.w3.org/2000/svg', 'path'); p.setAttribute('d', d); p.setAttribute('fill', 'none'); g.appendChild(p);
+})();
 
 // fair random: uses the browser's secure random numbers
 function flipRandom() { return crypto.getRandomValues(new Uint32Array(1))[0] % 2 === 0 ? 'H' : 'T'; }
@@ -166,7 +232,7 @@ function land(face) {
   if (call) { hit = (call === face); if (hit) { st.win++; verdict = '🎉 You called it!'; sfxWin(); } else { st.lose++; verdict = '😅 Wrong call, try again!'; sfxLose(); } }
   st.hist.unshift({ f: face, h: hit }); st.hist = st.hist.slice(0, 30);
   save(); render();
-  $('result').innerHTML = (face === 'H' ? 'HEADS 👑' : 'TAILS ⭐') + (verdict ? '<small>' + verdict + '</small>' : '');
+  $('result').innerHTML = (face === 'H' ? 'HEADS 🦁' : 'TAILS ₹10') + (verdict ? '<small>' + verdict + '</small>' : '');
   busy = false; coin.disabled = false;
 }
 
