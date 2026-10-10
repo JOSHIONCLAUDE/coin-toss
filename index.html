@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Coin Toss</title>
+<meta name="description" content="Click the coin to toss it. Heads or tails?">
+<meta name="theme-color" content="#14213d">
+<style>
+  :root { --gold1:#ffe58a; --gold2:#e6b422; --gold3:#a8770b; --ink:#14213d; --card:rgba(255,255,255,0.08); --line:rgba(255,255,255,0.16); }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; min-height:100%; }
+  body { background:radial-gradient(circle at 50% 18%, #2a3f73 0%, #14213d 55%, #0b1326 100%); background-attachment:fixed; color:#fff; font-family:'Segoe UI', system-ui, Arial, sans-serif; display:flex; flex-direction:column; align-items:center; padding:20px 16px 40px; user-select:none; -webkit-user-select:none; }
+  h1 { margin:6px 0 2px; font-size:clamp(30px, 6vw, 46px); letter-spacing:1px; }
+  .sub { margin:0 0 6px; opacity:0.8; }
+
+  #stage { position:relative; width:260px; height:360px; display:flex; align-items:flex-end; justify-content:center; perspective:900px; margin-top:4px; }
+  #arc { position:absolute; bottom:70px; left:50%; width:200px; height:200px; margin-left:-100px; }
+  #arc.tossing { animation:arc 1.5s cubic-bezier(.3,.1,.5,1) forwards; }
+  @keyframes arc { 0% { transform:translateY(0) scale(1); } 45% { transform:translateY(-185px) scale(1.3); } 100% { transform:translateY(0) scale(1); } }
+  #shadow { position:absolute; bottom:44px; left:50%; width:150px; height:26px; margin-left:-75px; border-radius:50%; background:rgba(0,0,0,0.5); filter:blur(7px); transform-origin:center; }
+  #shadow.tossing { animation:shadow 1.5s cubic-bezier(.3,.1,.5,1) forwards; }
+  @keyframes shadow { 0% { transform:scale(1); opacity:0.6; } 45% { transform:scale(0.45); opacity:0.2; } 100% { transform:scale(1); opacity:0.6; } }
+
+  #coin { position:relative; width:200px; height:200px; padding:0; border:0; background:none; cursor:pointer; transform-style:preserve-3d; transition:transform 1.5s cubic-bezier(.15,.7,.2,1); outline:none; }
+  #coin:focus-visible .face { box-shadow:0 0 0 4px #fff; }
+  .face { position:absolute; inset:0; border-radius:50%; backface-visibility:hidden; -webkit-backface-visibility:hidden;
+    background:radial-gradient(circle at 34% 28%, var(--gold1) 0%, var(--gold2) 55%, var(--gold3) 100%); border:6px solid #c99a14; box-shadow:inset 0 0 0 5px rgba(255,255,255,0.18), inset 0 0 22px rgba(120,70,0,0.55); display:flex; align-items:center; justify-content:center; }
+  .face::before { content:''; position:absolute; inset:14px; border-radius:50%; border:3px dashed rgba(120,70,0,0.55); }
+  .face.front { transform:translateZ(6px); }
+  .face.back { transform:rotateX(180deg) translateZ(6px); }
+  .face svg { width:62%; height:62%; filter:drop-shadow(0 2px 1px rgba(255,255,255,0.45)); }
+  .edge { position:absolute; inset:0; border-radius:50%; background:linear-gradient(#a8770b, #7a5508); transform:translateZ(var(--z)); }
+  #coin:not(:disabled):hover { filter:brightness(1.07); }
+  #coin:disabled { cursor:default; }
+
+  #result { min-height:56px; font-size:clamp(28px, 6vw, 40px); font-weight:800; margin-top:4px; text-align:center; text-shadow:0 2px 10px rgba(0,0,0,0.5); }
+  #result small { display:block; font-size:16px; font-weight:600; opacity:0.9; margin-top:2px; }
+  #hint { opacity:0.7; font-size:14px; margin-top:2px; }
+
+  .row { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; align-items:center; margin-top:14px; }
+  .lbl { opacity:0.85; font-weight:600; }
+  .pill { padding:8px 16px; border-radius:999px; border:1px solid var(--line); background:var(--card); color:#fff; font:inherit; cursor:pointer; }
+  .pill.on { background:var(--gold2); color:#2b1a00; border-color:var(--gold2); font-weight:700; }
+  .pill:active { transform:scale(0.97); }
+
+  #stats { width:min(440px, 100%); margin-top:18px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px 16px; }
+  .grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; text-align:center; }
+  .stat b { display:block; font-size:26px; }
+  .stat span { font-size:12px; opacity:0.75; text-transform:uppercase; letter-spacing:0.5px; }
+  #bar { height:12px; border-radius:6px; overflow:hidden; margin:12px 0 4px; background:#3b4a73; display:flex; }
+  #barH { background:linear-gradient(90deg,#ffd45e,#e6b422); width:50%; transition:width .4s; }
+  #barT { background:linear-gradient(90deg,#8ec5ff,#4a90e2); flex:1; }
+  .barlbl { display:flex; justify-content:space-between; font-size:12px; opacity:0.75; }
+  #hist { display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin-top:12px; min-height:26px; }
+  .chip { width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; color:#2b1a00; }
+  .chip.H { background:#ffd45e; } .chip.T { background:#8ec5ff; }
+  .chip.hit { box-shadow:0 0 0 2px #4cd964; } .chip.miss { box-shadow:0 0 0 2px #ff5a5a; }
+  .foot { display:flex; gap:8px; justify-content:center; margin-top:16px; }
+  .foot .pill { font-size:13px; padding:6px 14px; }
+  @media (prefers-reduced-motion: reduce) { #arc.tossing, #shadow.tossing { animation-duration:0.4s; } #coin { transition-duration:0.4s; } }
+</style>
+</head>
+<body>
+  <h1>🪙 Coin Toss</h1>
+  <p class="sub">Click the coin to toss it!</p>
+
+  <div id="stage">
+    <div id="shadow"></div>
+    <div id="arc">
+      <button id="coin" aria-label="Toss the coin">
+        <div class="face front">
+          <svg viewBox="0 0 100 100" aria-hidden="true"><path d="M14 74 L22 34 L38 52 L50 24 L62 52 L78 34 L86 74 Z" fill="#8a5a00"/><rect x="14" y="76" width="72" height="10" rx="4" fill="#8a5a00"/><circle cx="22" cy="32" r="5" fill="#8a5a00"/><circle cx="50" cy="22" r="5" fill="#8a5a00"/><circle cx="78" cy="32" r="5" fill="#8a5a00"/></svg>
+        </div>
+        <div class="face back">
+          <svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 8 L61 38 L93 39 L67 58 L77 90 L50 71 L23 90 L33 58 L7 39 L39 38 Z" fill="#8a5a00"/></svg>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <div id="result" aria-live="polite">&nbsp;</div>
+  <div id="hint">or press Space</div>
+
+  <div class="row" id="callRow">
+    <span class="lbl">Call it:</span>
+    <button class="pill on" data-call="">No call</button>
+    <button class="pill" data-call="H">Heads 👑</button>
+    <button class="pill" data-call="T">Tails ⭐</button>
+  </div>
+
+  <div id="stats">
+    <div class="grid">
+      <div class="stat"><b id="sH">0</b><span>Heads</span></div>
+      <div class="stat"><b id="sT">0</b><span>Tails</span></div>
+      <div class="stat"><b id="sN">0</b><span>Tosses</span></div>
+      <div class="stat"><b id="sStreak">0</b><span>Streak</span></div>
+      <div class="stat"><b id="sWin">0</b><span>Calls right</span></div>
+      <div class="stat"><b id="sLose">0</b><span>Calls wrong</span></div>
+    </div>
+    <div id="bar"><div id="barH"></div><div id="barT"></div></div>
+    <div class="barlbl"><span id="pH">Heads 0%</span><span id="pT">Tails 0%</span></div>
+    <div id="hist" aria-label="Last tosses"></div>
+  </div>
+
+  <div class="foot">
+    <button class="pill" id="soundBtn">🔊 Sound on</button>
+    <button class="pill" id="resetBtn">Reset stats</button>
+  </div>
+
+<script>
+'use strict';
+const KEY = 'coinTossV1';
+let st = { H: 0, T: 0, streakFace: '', streak: 0, win: 0, lose: 0, hist: [], sound: true };
+try { const raw = JSON.parse(localStorage.getItem(KEY) || 'null'); if (raw) st = Object.assign(st, raw); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+
+const $ = id => document.getElementById(id);
+const coin = $('coin'), arc = $('arc'), shadow = $('shadow');
+let rot = 0, busy = false, call = '';
+
+// edge of the coin: a stack of thin discs so it looks thick when it spins
+for (let z = -5; z <= 5; z++) { const e = document.createElement('div'); e.className = 'edge'; e.style.setProperty('--z', z + 'px'); coin.insertBefore(e, coin.firstChild); }
+
+// fair random: uses the browser's secure random numbers
+function flipRandom() { return crypto.getRandomValues(new Uint32Array(1))[0] % 2 === 0 ? 'H' : 'T'; }
+function spinsRandom() { return 4 + (crypto.getRandomValues(new Uint32Array(1))[0] % 4); }
+
+// ---------- sound ----------
+let ac = null;
+function audio() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } return ac; }
+function tone(freq, dur, type, vol, slideTo, delay) {
+  if (!st.sound) return; const a = audio(); if (!a) return;
+  const o = a.createOscillator(), g = a.createGain(), t = a.currentTime + (delay || 0);
+  o.type = type; o.frequency.setValueAtTime(freq, t); if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dur + 0.05);
+}
+function sfxToss() { tone(300, 0.35, 'triangle', 0.12, 900); tone(2400, 0.08, 'sine', 0.1, 3200, 0.02); }
+function sfxLand() { [0, 0.11, 0.2].forEach((d, i) => { tone(3300 - i * 300, 0.4 - i * 0.1, 'sine', 0.13 - i * 0.03, 3100 - i * 300, d); tone(4900 - i * 400, 0.25, 'sine', 0.05, 4700, d); }); }
+function sfxWin() { [523, 659, 784].forEach((f, i) => tone(f, 0.22, 'triangle', 0.13, f, 0.55 + i * 0.1)); }
+function sfxLose() { tone(300, 0.35, 'sawtooth', 0.08, 150, 0.55); }
+
+// ---------- toss ----------
+function toss() {
+  if (busy) return;
+  busy = true; coin.disabled = true; $('result').innerHTML = '&nbsp;';
+  const face = flipRandom();                       // 'H' or 'T'
+  const want = face === 'H' ? 0 : 180;
+  rot += 360 * spinsRandom() + ((want - (rot % 360) + 360) % 360);
+  const tilt = (Math.random() - 0.5) * 16;
+  coin.style.transform = 'rotateZ(' + tilt + 'deg) rotateX(' + rot + 'deg)';
+  arc.classList.remove('tossing'); shadow.classList.remove('tossing'); void arc.offsetWidth;
+  arc.classList.add('tossing'); shadow.classList.add('tossing');
+  audio(); if (ac && ac.state === 'suspended') ac.resume();
+  sfxToss();
+  setTimeout(() => land(face), 1520);
+}
+function land(face) {
+  arc.classList.remove('tossing'); shadow.classList.remove('tossing');
+  sfxLand();
+  st[face]++;
+  if (st.streakFace === face) st.streak++; else { st.streakFace = face; st.streak = 1; }
+  let verdict = '';
+  let hit = null;
+  if (call) { hit = (call === face); if (hit) { st.win++; verdict = '🎉 You called it!'; sfxWin(); } else { st.lose++; verdict = '😅 Wrong call, try again!'; sfxLose(); } }
+  st.hist.unshift({ f: face, h: hit }); st.hist = st.hist.slice(0, 30);
+  save(); render();
+  $('result').innerHTML = (face === 'H' ? 'HEADS 👑' : 'TAILS ⭐') + (verdict ? '<small>' + verdict + '</small>' : '');
+  busy = false; coin.disabled = false; coin.focus({ preventScroll: true });
+}
+
+// ---------- screen ----------
+function render() {
+  const n = st.H + st.T;
+  $('sH').textContent = st.H; $('sT').textContent = st.T; $('sN').textContent = n;
+  $('sStreak').textContent = st.streak; $('sWin').textContent = st.win; $('sLose').textContent = st.lose;
+  const ph = n ? Math.round(st.H / n * 100) : 0, pt = n ? 100 - ph : 0;
+  $('barH').style.width = (n ? ph : 50) + '%';
+  $('pH').textContent = 'Heads ' + ph + '%'; $('pT').textContent = 'Tails ' + pt + '%';
+  $('hist').innerHTML = st.hist.map(h => '<span class="chip ' + h.f + (h.h === true ? ' hit' : h.h === false ? ' miss' : '') + '" title="' + (h.f === 'H' ? 'Heads' : 'Tails') + '">' + h.f + '</span>').join('');
+  $('soundBtn').textContent = st.sound ? '🔊 Sound on' : '🔇 Sound off';
+}
+coin.addEventListener('click', toss);
+window.addEventListener('keydown', e => { if (e.code === 'Space' && e.target === document.body) { e.preventDefault(); toss(); } });
+document.querySelectorAll('#callRow .pill').forEach(b => b.onclick = () => {
+  call = b.dataset.call; document.querySelectorAll('#callRow .pill').forEach(x => x.classList.toggle('on', x === b));
+});
+$('soundBtn').onclick = () => { st.sound = !st.sound; save(); render(); };
+$('resetBtn').onclick = () => { if (!confirm('Reset all your coin toss stats?')) return; st = { H: 0, T: 0, streakFace: '', streak: 0, win: 0, lose: 0, hist: [], sound: st.sound }; save(); render(); $('result').innerHTML = '&nbsp;'; };
+render();
+</script>
+</body>
+</html>
