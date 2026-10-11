@@ -14,7 +14,7 @@
   h1 { margin:6px 0 2px; font-size:clamp(30px, 6vw, 46px); letter-spacing:1px; }
   .sub { margin:0 0 6px; opacity:0.8; }
 
-  #stage { position:relative; width:260px; height:360px; display:flex; align-items:flex-end; justify-content:center; perspective:900px; margin-top:4px; }
+  #stage { position:relative; width:260px; height:360px; display:flex; align-items:flex-end; justify-content:center; margin-top:4px; }
   #arc { position:absolute; bottom:70px; left:50%; width:200px; height:200px; margin-left:-100px; }
   #arc.tossing { animation:arc 1.5s cubic-bezier(.3,.1,.5,1) forwards; }
   @keyframes arc { 0% { transform:translateY(0) scale(1); } 45% { transform:translateY(-185px) scale(1.3); } 100% { transform:translateY(0) scale(1); } }
@@ -22,18 +22,16 @@
   #shadow.tossing { animation:shadow 1.5s cubic-bezier(.3,.1,.5,1) forwards; }
   @keyframes shadow { 0% { transform:scale(1); opacity:0.6; } 45% { transform:scale(0.45); opacity:0.2; } 100% { transform:scale(1); opacity:0.6; } }
 
-  #coin { position:relative; width:200px; height:200px; cursor:pointer; -webkit-transform-style:preserve-3d; transform-style:preserve-3d; touch-action:manipulation; transition:transform 1.5s cubic-bezier(.15,.7,.2,1); outline:none; }
+  /* The spin is drawn with plain 2D scaling (no 3D transforms), so it looks the same on every phone and browser. */
+  #coin { position:relative; width:200px; height:200px; cursor:pointer; touch-action:manipulation; outline:none; will-change:transform; }
   #coin:focus-visible .face { box-shadow:0 0 0 4px #fff; }
-  .face { position:absolute; inset:0; border-radius:50%; backface-visibility:hidden; -webkit-backface-visibility:hidden; }
-  .face.front { transform:translateZ(6px); }
-  .face.back { transform:rotateX(180deg) translateZ(6px); }
+  .face { position:absolute; inset:0; border-radius:50%; }
   .face svg { width:100%; height:100%; display:block; font-family:'Nirmala UI','Noto Sans Devanagari','Mangal','Segoe UI',system-ui,sans-serif; }
-  .edge { position:absolute; inset:0; border-radius:50%; background:linear-gradient(#c9ced2, #7f868c); transform:translateZ(var(--z)); }
+  #coin .back { display:none; }
+  #coin.flipback .back { display:block; }
+  #coin.flipback .front { display:none; }
   #coin:not(.busy):hover { filter:brightness(1.07); }
   #coin.busy { cursor:default; }
-  /* once the coin has landed it is shown flat: only the face that came up is drawn, upright (some phone browsers don't hide the back of a flipped element) */
-  #coin.settled.heads .back, #coin.settled.tails .front { display:none; }
-  #coin.settled.tails .back { transform:translateZ(6px); }
 
   #result { min-height:56px; font-size:clamp(28px, 6vw, 40px); font-weight:800; margin-top:4px; text-align:center; text-shadow:0 2px 10px rgba(0,0,0,0.5); }
   #result small { display:block; font-size:16px; font-weight:600; opacity:0.9; margin-top:2px; }
@@ -59,7 +57,7 @@
   .chip.hit { box-shadow:0 0 0 2px #4cd964; } .chip.miss { box-shadow:0 0 0 2px #ff5a5a; }
   .foot { display:flex; gap:8px; justify-content:center; margin-top:16px; }
   .foot .pill { font-size:13px; padding:6px 14px; }
-  @media (prefers-reduced-motion: reduce) { #arc.tossing, #shadow.tossing { animation-duration:0.4s; } #coin { transition-duration:0.4s; } }
+  @media (prefers-reduced-motion: reduce) { #arc.tossing, #shadow.tossing { animation-duration:0.4s; } }
 </style>
 </head>
 <body>
@@ -76,8 +74,8 @@
             <defs>
               <radialGradient id="ringF" cx="35%" cy="28%" r="85%"><stop offset="0" stop-color="#f9fbfc"/><stop offset=".55" stop-color="#c6cbcf"/><stop offset="1" stop-color="#868d94"/></radialGradient>
               <radialGradient id="goldF" cx="35%" cy="28%" r="85%"><stop offset="0" stop-color="#fff0a8"/><stop offset=".55" stop-color="#e0aa24"/><stop offset="1" stop-color="#a8770b"/></radialGradient>
-              <filter id="embF" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="1" stdDeviation="0.4" flood-color="#fff3b8" flood-opacity="0.95"/></filter>
-              <filter id="embR" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="0.8" stdDeviation="0.3" flood-color="#ffffff" flood-opacity="0.9"/></filter>
+              <filter id="embF" x="-10%" y="-10%" width="120%" height="130%"><feGaussianBlur in="SourceAlpha" stdDeviation="0.4" result="b"/><feOffset in="b" dx="0" dy="1" result="o"/><feFlood flood-color="#fff3b8" flood-opacity="0.95"/><feComposite in2="o" operator="in" result="s"/><feMerge><feMergeNode in="s"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+              <filter id="embR" x="-10%" y="-10%" width="120%" height="130%"><feGaussianBlur in="SourceAlpha" stdDeviation="0.4" result="b"/><feOffset in="b" dx="0" dy="1" result="o"/><feFlood flood-color="#ffffff" flood-opacity="0.9"/><feComposite in2="o" operator="in" result="s"/><feMerge><feMergeNode in="s"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
               <path id="topArcF" d="M 20 100 A 80 80 0 0 1 180 100"/>
             </defs>
             <circle cx="100" cy="100" r="99" fill="url(#ringF)"/>
@@ -86,8 +84,8 @@
             <circle cx="100" cy="100" r="68" fill="url(#goldF)"/>
             <circle cx="100" cy="100" r="63" fill="none" stroke="rgba(120,70,0,0.45)" stroke-width="1.4" stroke-dasharray="3 3"/>
             <g filter="url(#embR)" fill="#4f545a" font-weight="800" font-size="14">
-              <text><textPath href="#topArcF" startOffset="9%">भारत</textPath></text>
-              <text text-anchor="end"><textPath href="#topArcF" startOffset="91%" text-anchor="end">INDIA</textPath></text>
+              <text><textPath href="#topArcF" xlink:href="#topArcF" startOffset="9%">भारत</textPath></text>
+              <text text-anchor="end"><textPath href="#topArcF" xlink:href="#topArcF" startOffset="91%" text-anchor="end">INDIA</textPath></text>
             </g>
             <circle cx="15.5" cy="100" r="2.6" fill="#5c6167"/><circle cx="184.5" cy="100" r="2.6" fill="#5c6167"/>
             <g filter="url(#embF)">
@@ -115,8 +113,8 @@
             <defs>
               <radialGradient id="ringB" cx="35%" cy="28%" r="85%"><stop offset="0" stop-color="#f9fbfc"/><stop offset=".55" stop-color="#c6cbcf"/><stop offset="1" stop-color="#868d94"/></radialGradient>
               <radialGradient id="goldB" cx="35%" cy="28%" r="85%"><stop offset="0" stop-color="#fff0a8"/><stop offset=".55" stop-color="#e0aa24"/><stop offset="1" stop-color="#a8770b"/></radialGradient>
-              <filter id="embB" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="1" stdDeviation="0.4" flood-color="#fff3b8" flood-opacity="0.95"/></filter>
-              <filter id="embRB" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="0.8" stdDeviation="0.3" flood-color="#ffffff" flood-opacity="0.9"/></filter>
+              <filter id="embB" x="-10%" y="-10%" width="120%" height="130%"><feGaussianBlur in="SourceAlpha" stdDeviation="0.4" result="b"/><feOffset in="b" dx="0" dy="1" result="o"/><feFlood flood-color="#fff3b8" flood-opacity="0.95"/><feComposite in2="o" operator="in" result="s"/><feMerge><feMergeNode in="s"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+              <filter id="embRB" x="-10%" y="-10%" width="120%" height="130%"><feGaussianBlur in="SourceAlpha" stdDeviation="0.4" result="b"/><feOffset in="b" dx="0" dy="1" result="o"/><feFlood flood-color="#ffffff" flood-opacity="0.9"/><feComposite in2="o" operator="in" result="s"/><feMerge><feMergeNode in="s"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
               <path id="topArcB" d="M 20 100 A 80 80 0 0 1 180 100"/>
               <path id="botArcB" d="M 9 100 A 91 91 0 0 0 191 100"/>
             </defs>
@@ -126,8 +124,8 @@
             <circle cx="100" cy="100" r="68" fill="url(#goldB)"/>
             <circle cx="100" cy="100" r="63" fill="none" stroke="rgba(120,70,0,0.45)" stroke-width="1.4" stroke-dasharray="3 3"/>
             <g filter="url(#embRB)" fill="#4f545a" font-weight="800" font-size="13">
-              <text text-anchor="middle"><textPath href="#topArcB" startOffset="50%" text-anchor="middle">TEN RUPEES</textPath></text>
-              <text text-anchor="middle"><textPath href="#botArcB" startOffset="50%" text-anchor="middle">दस रुपये</textPath></text>
+              <text text-anchor="middle"><textPath href="#topArcB" xlink:href="#topArcB" startOffset="50%" text-anchor="middle">TEN RUPEES</textPath></text>
+              <text text-anchor="middle"><textPath href="#botArcB" xlink:href="#botArcB" startOffset="50%" text-anchor="middle">दस रुपये</textPath></text>
             </g>
             <circle cx="15.5" cy="100" r="2.6" fill="#5c6167"/><circle cx="184.5" cy="100" r="2.6" fill="#5c6167"/>
             <g stroke="rgba(120,70,0,0.38)" stroke-width="1.2" id="rays"></g>
@@ -181,9 +179,6 @@ const $ = id => document.getElementById(id);
 const coin = $('coin'), arc = $('arc'), shadow = $('shadow');
 let rot = 0, busy = false, call = '';
 
-// edge of the coin: a stack of thin discs so it looks thick when it spins
-for (let z = -5; z <= 5; z++) { const e = document.createElement('div'); e.className = 'edge'; e.style.setProperty('--z', z + 'px'); coin.insertBefore(e, coin.firstChild); }
-
 // little rays around the inside of the golden centre on the "₹10" side
 (function () {
   const g = document.getElementById('rays'); let d = '';
@@ -211,29 +206,39 @@ function sfxWin() { [523, 659, 784].forEach((f, i) => tone(f, 0.22, 'triangle', 
 function sfxLose() { tone(300, 0.35, 'sawtooth', 0.08, 150, 0.55); }
 
 // ---------- toss ----------
-let lastTilt = 0;
-function noTransition(fn) { coin.style.transition = 'none'; fn(); void coin.offsetWidth; coin.style.transition = ''; }
-// show the landed face flat and upright
-function settle(face) { noTransition(() => { coin.classList.add('settled', face === 'H' ? 'heads' : 'tails'); coin.style.transform = 'rotateZ(' + lastTilt + 'deg)'; }); }
-// go back to the normal 3D pose at the same angle the coin was resting at, ready to spin again
-function unsettle() { if (!coin.classList.contains('settled')) return; noTransition(() => { coin.classList.remove('settled', 'heads', 'tails'); coin.style.transform = 'rotateZ(' + lastTilt + 'deg) rotateX(' + rot + 'deg)'; }); }
+// The coin is flipped with a simple 2D squash: the face is squeezed to |cos(angle)| of its height, and the picture
+// switches to the other side whenever cos(angle) goes negative. At the end the angle is exactly 0 (heads) or 180 (tails).
+let lastTilt = 0, flipAnim = 0;
+function setAngle(deg) {
+  const c = Math.cos(deg * Math.PI / 180);
+  coin.classList.toggle('flipback', c < 0);
+  coin.style.transform = 'rotate(' + lastTilt + 'deg) scaleY(' + Math.max(0.07, Math.abs(c)).toFixed(3) + ')';
+}
 function toss() {
   if (busy) return;
   busy = true; coin.classList.add('busy'); $('result').innerHTML = '&nbsp;';
-  unsettle();
   const face = flipRandom();                       // 'H' or 'T'
   const want = face === 'H' ? 0 : 180;
-  rot += 360 * spinsRandom() + ((want - (rot % 360) + 360) % 360);
-  const tilt = (Math.random() - 0.5) * 16;
-  lastTilt = tilt;
-  coin.style.transform = 'rotateZ(' + tilt + 'deg) rotateX(' + rot + 'deg)';
+  const start = rot, delta = 360 * spinsRandom() + ((want - (rot % 360) + 360) % 360);
+  rot = start + delta;
+  lastTilt = (Math.random() - 0.5) * 16;
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const dur = reduce ? 400 : 1500;
   arc.classList.remove('tossing'); shadow.classList.remove('tossing'); void arc.offsetWidth;
   arc.classList.add('tossing'); shadow.classList.add('tossing');
   audio(); if (ac && ac.state === 'suspended') ac.resume();
   sfxToss();
-  setTimeout(() => land(face), 1520);
+  const t0 = performance.now();
+  const step = now => {
+    const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 2.4);   // starts fast, slows down as it lands
+    setAngle(start + delta * e);
+    if (p < 1) flipAnim = requestAnimationFrame(step);
+  };
+  cancelAnimationFrame(flipAnim); flipAnim = requestAnimationFrame(step);
+  setTimeout(() => land(face), dur + 20);
 }
 function land(face) {
+  cancelAnimationFrame(flipAnim); setAngle(rot);     // final picture is always the face that came up, upright
   arc.classList.remove('tossing'); shadow.classList.remove('tossing');
   sfxLand();
   st[face]++;
@@ -244,7 +249,6 @@ function land(face) {
   st.hist.unshift({ f: face, h: hit }); st.hist = st.hist.slice(0, 30);
   save(); render();
   $('result').innerHTML = (face === 'H' ? 'HEADS 🦁' : 'TAILS ₹10') + (verdict ? '<small>' + verdict + '</small>' : '');
-  settle(face);
   busy = false; coin.classList.remove('busy');
 }
 
@@ -277,6 +281,7 @@ document.querySelectorAll('#callRow .pill').forEach(b => b.onclick = () => {
 });
 $('soundBtn').onclick = () => { st.sound = !st.sound; save(); render(); };
 $('resetBtn').onclick = () => { if (!confirm('Reset all your coin toss stats?')) return; st = { H: 0, T: 0, streakFace: '', streak: 0, win: 0, lose: 0, hist: [], sound: st.sound }; save(); render(); $('result').innerHTML = '&nbsp;'; };
+setAngle(0);
 render();
 </script>
 </body>
